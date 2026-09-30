@@ -1,26 +1,164 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * ARICO design tokens
+ * -------------------
+ * Colour values are a proposed direction (no brand palette supplied yet).
+ * Swap the hex values here and the whole site follows.
+ *
+ * glass-*      dark cinematic surfaces (hero, menu, footer)
+ * mist-*       light surfaces and hairlines (everything after the hero)
+ * graphite-900 text on light surfaces
+ * signal-*     the single accent: 300 on dark, 500 focus, 700 on light
+ */
+@theme static {
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --color-glass-950: #08121a;
+  --color-glass-900: #0d1b25;
+  --color-glass-800: #142731;
+  --color-glass-700: #1f3742;
+  --color-glass-500: #4b6772;
+
+  --color-mist-50: #f5f7f7;
+  --color-mist-100: #ebf0f1;
+  --color-mist-200: #dae2e4;
+  --color-mist-300: #bfcbcf;
+  --color-mist-500: #7d8f95;
+  --color-mist-700: #4a5b61;
+
+  --color-graphite-900: #121d23;
+
+  --color-signal-300: #8ed8de;
+  --color-signal-500: #2ba5b3;
+  --color-signal-700: #0c6570;
+
+  /* Type scale: fluid display sizes, tuned for a 320px to 1920px range */
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.45;
+  --text-caption--letter-spacing: 0.01em;
+  --text-small: 0.9375rem;
+  --text-small--line-height: 1.5;
+  --text-body: 1rem;
+  --text-body--line-height: 1.65;
+  --text-lead: clamp(1.125rem, 1.05rem + 0.35vw, 1.375rem);
+  --text-lead--line-height: 1.5;
+  --text-title: clamp(1.5rem, 1.2rem + 1vw, 2.25rem);
+  --text-title--line-height: 1.15;
+  --text-title--letter-spacing: -0.02em;
+  --text-display-md: clamp(2.125rem, 1.4rem + 2.8vw, 4rem);
+  --text-display-md--line-height: 1;
+  --text-display-md--letter-spacing: -0.03em;
+  --text-display-lg: clamp(2.75rem, 1.4rem + 5.4vw, 6.5rem);
+  --text-display-lg--line-height: 0.95;
+  --text-display-lg--letter-spacing: -0.035em;
+  --text-display-xl: clamp(3.25rem, 1.2rem + 9.6vw, 9.5rem);
+  --text-display-xl--line-height: 0.9;
+  --text-display-xl--letter-spacing: -0.04em;
+
+  /* Easing: keep in sync with src/lib/motion.ts */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 
+/* Font families come from next/font CSS variables set in layout.tsx */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* Layout */
+  --gutter: clamp(1.25rem, 0.6rem + 3vw, 4rem);
+  --section-y: clamp(5rem, 3rem + 9vw, 11rem);
+  --header-h: 4.5rem;
+
+  /* Durations: keep in sync with src/lib/motion.ts */
+  --dur-fast: 180ms;
+  --dur-base: 320ms;
+  --dur-slow: 700ms;
+  --dur-cinematic: 1200ms;
+}
+
+@utility section-y {
+  padding-block: var(--section-y);
+}
+
+@layer base {
+  html {
+    scroll-padding-top: calc(var(--header-h) + 1rem);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    background-color: var(--color-mist-50);
+    color: var(--color-graphite-900);
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-signal-300);
+    color: var(--color-glass-950);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-signal-500);
+    outline-offset: 3px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Lock page scroll while the mobile menu (a modal <dialog>) is open. */
+@media (max-width: 63.999rem) {
+  html:has(dialog[open]) {
+    overflow: hidden;
+  }
+}
+
+/* Mobile menu entrance. Exit is instant by design. */
+@media (prefers-reduced-motion: no-preference) {
+  dialog.menu-panel[open] {
+    animation: menu-in var(--dur-base) var(--ease-out-expo);
+  }
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -0.75rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
+ * Scroll reveal (see components/ui/reveal.tsx).
+ * Content is only hidden when JS can run AND the visitor has not asked for
+ * reduced motion, so no-JS / reduced-motion users always see everything.
+ * Only opacity and transform are animated.
+ */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    opacity: 0;
+    transform: translate3d(0, 1.5rem, 0);
+    transition:
+      opacity var(--dur-slow) var(--ease-out-expo) var(--reveal-delay, 0ms),
+      transform var(--dur-slow) var(--ease-out-expo) var(--reveal-delay, 0ms);
+  }
+
+  [data-reveal][data-revealed="true"] {
+    opacity: 1;
+    transform: none;
+  }
 }
